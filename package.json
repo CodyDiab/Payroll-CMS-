@@ -1,0 +1,24 @@
+{
+  "name": "payroll-cms-",
+  "version": "1.0.0",
+  "description": "a cms application to track those employed by user",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodyDiab/Payroll-CMS-.git"
+  },
+  "author": "Cody Diab",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodyDiab/Payroll-CMS-/issues"
+  },
+  "homepage": "https://github.com/CodyDiab/Payroll-CMS-#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^7.1.0",
+    "mysql2": "^2.1.0"
+  }
+}
