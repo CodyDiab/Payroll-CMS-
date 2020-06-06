@@ -34,13 +34,13 @@ let connection = mysql.createConnection({
     console.log("You have selected", answer.choice);
     switch(answer.choice) {
         case "End session": return terminateApp();
-        case "Add and employee": return addEmployee();
+        case "Add an employee": return addEmployee();
         case "Add a department": return addDepartment();
         case "Add a role": return addRole();
         case "Veiw employees": return viewTable("employees");
         case "Veiw departments": return viewTable("departments");
         case "Veiw roles and salarys": return viewTable("roles");
-        case "Change an employees role": return updateEmployee();
+        case "Update employee": return updateEmployee();
       
     }
 });
@@ -73,69 +73,114 @@ const viewJoinedTable = () => {
 }
 /// add employee
 
-const addEmployee = () => {
-    let query = `SELECT (title) FROM roles`;
-    let roles = [];
-    connection.query(query,(err,result) => {
-        if(err) throw err;
-        roles = result.map(element => element.title);
-    });
-    // get managers
-    let managerQuery = `SELECT first_name,last_name FROM employees`
-    let managers = [];
-    connection.query(managerQuery,(err,result) => {
-        if(err) throw err;
-        managers = result.map(element => `${element.first_name} ${element.last_name}`);
-        employeeQuestion(roles,managers) 
-    });
-};
-const employeeQuestion = (roles, managers) => {
-    inquirer.prompt([
-        {
-            type:"input",
-            name: "first_name",
-            message: "What is the employee's first name?",
-            required: "true",
-            default:"."
-        },
-        {
-            type:"input",
-            name:"last_name",
-            message:"What is the employee's last name?",
-            required:"true",
-            default: "Unknown"
+// const addEmployee = () => {
+//     let query = `SELECT (title) FROM roles`;
+//     let roles = [];
+//     connection.query(query,(err,result) => {
+//         if(err) throw err;
+//         roles = result.map(element => element.title);
+//     });
+//     // get managers
+//     let managerQuery = `SELECT first_name,last_name FROM employees`
+//     let managers = [];
+//     connection.query(managerQuery,(err,result) => {
+//         if(err) throw err;
+//         managers = result.map(element => `${element.first_name} ${element.last_name}`);
+//         employeeQuestion(roles,managers) 
+//     });
+// };
+// const employeeQuestion = (roles, managers) => {
+//     inquirer.prompt([
+//         {
+//             type:"input",
+//             name: "first_name",
+//             message: "What is the employee's first name?",
+//             required: "true",
+//             default:"."
+//         },
+//         {
+//             type:"input",
+//             name:"last_name",
+//             message:"What is the employee's last name?",
+//             required:"true",
+//             default: "Unknown"
 
+//         },
+//         {
+//             type: "list",
+//             name: "role_id", 
+//             message: "Select the employee's role",
+//             choices: roles,
+//             required: "true",   
+//         },
+//         {
+//             type: "list",
+//             name: "manager_id",
+//             message: "Select the employee's manager",
+//             choices: managers,
+//             required: "true",
+//             default: "unknown"  
+//         }
+//     ]).then(answer => {
+//         let roleQuery = `SELECT id FROM roles WHERE title = ? `;
+//         connection.query(roleQuery,[answer.role_id], (err,role_id_result) => {
+//             if(err) throw err;
+//             answer.role_id =role_id_result[0].id;
+//          let mngIdQuery = `SELECT id FROM employees WHERE first_name = ? AND last_name = ?  `;
+//          connection.query(mngIdQuery, [answer.manager_id], (err,emp_id_result) => {
+//              if(err) throw err;
+//              answer.manager_id = emp_id_result[0].id;
+//              addToTable(answer, "employees");
+//          });
+//         });
+//     })
+//     .then(() => viewJoinedTable() );
+// };
+
+function addEmployee() {
+    inquirer
+    .prompt([
+        {
+            type: 'input',
+            message: 'Enter employee first name',
+            name: 'firstname'
         },
         {
-            type: "list",
-            name: "role_id", 
-            message: "Select the employee's role",
-            choices: roles,
-            required: "true",   
+            type: 'input',
+            message: 'Enter employee last name',
+            name: 'lastname'
         },
         {
-            type: "list",
-            name: "manager_id",
-            message: "Select the employee's manager",
-            choices: managers,
-            required: "true",
-            default: "unknown"  
+            type: 'input',
+            message: 'What is the employees role id',
+            name: 'rolesID'
+        },
+        {
+            type: 'input',
+            message: 'What is the employees manager id',
+            name: 'managerID'
         }
-    ]).then(answers => {
-        let roleQuery = `SELECT id FROM roles WHERE title = ? `;
-        connection.query(roleQuery,[answers.role_id], (err,role_id_result) => {
-            if(err) throw err;
-            answer.role_id =role_id_result[0].id;
-         let mngIdQuery = `SELECT id FROM employees WHERE first_name = ? AND last_name = ?  `;
-         connection.query(mngIdQuery, [answers.manager_id], (err,emp_id_result) => {
-             if(err) throw err;
-             answers.manager_id = emp_id_result[0].id;
-             addToTable(answers, "employees");
-         });
-        });
-    })
-    .then(() => viewJoinedTable() );
-};
+    ])
+    .then(function(answer) {
+        connection.query(
+            'INSERT INTO employees SET ?',
+            {
+                first_name: answer.firstname,
+                last_name: answer.lastname,
+                role_id: answer.rolesID,
+                manager_id: answer.managerID
+            },
+            function(err, answer) {
+                if (err) {
+                    throw err;
+                }
+                
+                viewTable('employees');
+            }
+        );
+        viewJoinedTable();
+    });
+}
 // add role
 const addRole = () => {
     let query = "SELECT (name) FROM departments";
@@ -177,7 +222,7 @@ const roleQuestion = (deptNames) => {
             if(err) throw err;
             answers.salary = parseFloat(answers.salary);
             answers.department_id = result[0].id;
-            adToTable(answers, "roles");
+            addToTable(answers, "roles");
 
         })
     })
@@ -199,7 +244,7 @@ const addDepartment = () => {
   };
   // update employee
   const updateEmployee = () => {
-      
+     
     inquirer
     .prompt({
       name: "id",
