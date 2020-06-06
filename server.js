@@ -1,5 +1,4 @@
 const inquirer = require("inquirer");
-const fs = require("fs");
 const mysql = require("mysql2");
 const consoleTable = require("console.table");
 require("dotenv").config();
@@ -12,30 +11,18 @@ let connection = mysql.createConnection({
 });
 
 //add for terminate employee
-const initPrompt = () =>{
-    inquirer.prompt({
-        type: "list",
-        name: "nav",
+initPrompt = () => {
+     inquirer
+     .prompt({
+        type: 'list',
+        name: 'choice',
         message: "Which would you like to access?",
-        choices:["End session","Add an employee","Add a department","Add a role","Veiw employees","Veiw departments","Veiw roles and salarys","Change an employees role","Change an employees manager"
+        choices:["End session","Add an employee","Add a department","Add a role","Veiw employees","Veiw departments","Veiw roles and salarys","Change an employees role",
+        new inquirer.Separator()
     ],
     default:"Veiw employees"
     })
-    .then(answer => {
-        console.log("You have selected", answer.nav);
-        switch(answer.nav) {
-            case "End session": return terminateApp();
-            case "Add and employee": return addEmployee();
-            case "Add a department": return addDepartment();
-            case "Add a role": return addRole();
-            case "Veiw employees": return viewTable("employees");
-            case "Veiw departments": return viewTable("departments");
-            case "Veiw roles and salarys": return viewTable("roles");
-            case "Change an employees role": return changeEmployeeRole();
-            case "Change an employees manager": return changeEmployeeManager();
-        }
-    });
-};
+}
 
 // viewtable function
 const viewTable = (tableName) => {
@@ -113,6 +100,68 @@ const employeeQuestion = (roles, managers) => {
     })
     .then(() => initPrompt() );
 };
+// add role
+const addRole = () => {
+    let query = "SELECT (name) FROM departments";
+    let deptName = [];
+    connection.query(query,(err,result) => {
+        if(err) throw err;
+        deptName = result.map(element => element.name);
+        roleQuestion(deptNames)
+    })
+}
+const roleQuestion = (deptNames) => {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "title",
+            message: "What is the role name?",
+            required: "true",
+            default: "default-role"
+          },
+          {
+            type: "input",
+            name: "salary",
+            message: "What is the yearly salary for the role",
+            required: "true",
+            default: "0"
+          },
+          {
+            type: "list",
+            name: "department_id",  
+            message: "Select a department",
+            choices: deptNames,
+            required: "true",
+          }
+
+    ])
+    .then(answers => {
+        let query = `SELECT id FROM departments WHERE name = ? `;
+        connection.query(query,[answers.department-id], (err,result) => {
+            if(err) throw err;
+            answers.salary = parseFloat(answers.salary);
+            answers.department_id = result[0].id;
+            insertIntoTable(answers, "roles");
+
+        })
+    })
+    .then(()=> initPrompt())
+}
+//add department
+const addDepartment = () => {
+    inquirer.prompt({
+      type: "input",
+      name: "name",
+      message: "What is the name of the department you would like to add?",
+      required: "true",
+      default: "nothing"
+    })
+    .then(answer => {
+      insertIntoTable(answer, "departments");
+    })
+    .then(() => initPrompt());
+  };
+  
 
 
 // add to table function
@@ -122,7 +171,7 @@ const addToTable = ((answers,tableName)=> {
       if(err) throw err;
   });
 });
-addtoTable.catch = err => {
+addToTable.catch = err => {
     console.log("ERROR in addToTable()");
   }
 /// function to terminate app
@@ -162,4 +211,18 @@ const initLog = () => {
 };
 
 initLog();
-initPrompt();
+initPrompt()
+.then(answer => {
+    console.log("You have selected", answer.choice);
+    switch(answer.choice) {
+        case "End session": return terminateApp();
+        case "Add and employee": return addEmployee();
+        case "Add a department": return addDepartment();
+        case "Add a role": return addRole();
+        case "Veiw employees": return viewTable("employees");
+        case "Veiw departments": return viewTable("departments");
+        case "Veiw roles and salarys": return viewTable("roles");
+        case "Change an employees role": return changeEmployeeRole();
+      
+    }
+});
