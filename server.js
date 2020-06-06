@@ -5,24 +5,47 @@ require("dotenv").config();
 
 let connection = mysql.createConnection({
     host: "localhost",
-    user: " root",
-    password: process.env.PASSWORD,
+    user: "root",
+    password: 'cHARLIE14!',
     database: "payroll_db"
 });
 
 //add for terminate employee
-initPrompt = () => {
+const initPrompt = () => {
      inquirer
      .prompt({
         type: 'list',
         name: 'choice',
         message: "Which would you like to access?",
-        choices:["End session","Add an employee","Add a department","Add a role","Veiw employees","Veiw departments","Veiw roles and salarys","Change an employees role",
-        new inquirer.Separator()
-    ],
-    default:"Veiw employees"
-    })
+        choices:[
+        "End session",
+        "Add an employee",
+        "Add a department",
+        "Add a role",
+        "Veiw employees",
+        "Veiw departments",
+        "Veiw roles and salarys",
+        "Change an employees role",
+         ],
+         default:"Veiw employees"
+  })
+
+.then(answer => {
+    console.log("You have selected", answer.choice);
+    switch(answer.choice) {
+        case "End session": return terminateApp();
+        case "Add and employee": return addEmployee();
+        case "Add a department": return addDepartment();
+        case "Add a role": return addRole();
+        case "Veiw employees": return viewTable("employees");
+        case "Veiw departments": return viewTable("departments");
+        case "Veiw roles and salarys": return viewTable("roles");
+        case "Change an employees role": return changeEmployeeRole();
+      
+    }
+});
 }
+
 
 // viewtable function
 const viewTable = (tableName) => {
@@ -103,10 +126,10 @@ const employeeQuestion = (roles, managers) => {
 // add role
 const addRole = () => {
     let query = "SELECT (name) FROM departments";
-    let deptName = [];
+    let deptNames = [];
     connection.query(query,(err,result) => {
         if(err) throw err;
-        deptName = result.map(element => element.name);
+        deptNames = result.map(element => element.name);
         roleQuestion(deptNames)
     })
 }
@@ -137,11 +160,11 @@ const roleQuestion = (deptNames) => {
     ])
     .then(answers => {
         let query = `SELECT id FROM departments WHERE name = ? `;
-        connection.query(query,[answers.department-id], (err,result) => {
+        connection.query(query,[answers.department_id], (err,result) => {
             if(err) throw err;
             answers.salary = parseFloat(answers.salary);
             answers.department_id = result[0].id;
-            insertIntoTable(answers, "roles");
+            adToTable(answers, "roles");
 
         })
     })
@@ -157,10 +180,12 @@ const addDepartment = () => {
       default: "nothing"
     })
     .then(answer => {
-      insertIntoTable(answer, "departments");
+      addToTable(answer, "departments");
     })
     .then(() => initPrompt());
   };
+  // change employee role
+
   
 
 
@@ -211,18 +236,19 @@ const initLog = () => {
 };
 
 initLog();
-initPrompt()
-.then(answer => {
-    console.log("You have selected", answer.choice);
-    switch(answer.choice) {
-        case "End session": return terminateApp();
-        case "Add and employee": return addEmployee();
-        case "Add a department": return addDepartment();
-        case "Add a role": return addRole();
-        case "Veiw employees": return viewTable("employees");
-        case "Veiw departments": return viewTable("departments");
-        case "Veiw roles and salarys": return viewTable("roles");
-        case "Change an employees role": return changeEmployeeRole();
+// initPrompt()
+// .then(answer => {
+//     console.log("You have selected", answer.choice);
+//     switch(answer.choice) {
+//         case "End session": return terminateApp();
+//         case "Add and employee": return addEmployee();
+//         case "Add a department": return addDepartment();
+//         case "Add a role": return addRole();
+//         case "Veiw employees": return viewTable("employees");
+//         case "Veiw departments": return viewTable("departments");
+//         case "Veiw roles and salarys": return viewTable("roles");
+//         case "Change an employees role": return changeEmployeeRole();
       
-    }
-});
+//     }
+// });
+ viewTable("employees");
