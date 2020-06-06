@@ -11,7 +11,7 @@ let connection = mysql.createConnection({
 });
 
 //add for terminate employee
-const initPrompt = () => {
+ initPrompt = () => {
      inquirer
      .prompt({
         type: 'list',
@@ -25,7 +25,7 @@ const initPrompt = () => {
         "Veiw employees",
         "Veiw departments",
         "Veiw roles and salarys",
-        "Change an employees role",
+        "Update employee",
          ],
          default:"Veiw employees"
   })
@@ -40,7 +40,7 @@ const initPrompt = () => {
         case "Veiw employees": return viewTable("employees");
         case "Veiw departments": return viewTable("departments");
         case "Veiw roles and salarys": return viewTable("roles");
-        case "Change an employees role": return changeEmployeeRole();
+        case "Change an employees role": return updateEmployee();
       
     }
 });
@@ -58,6 +58,19 @@ const viewTable = (tableName) => {
     });
 };
 
+const viewJoinedTable = () => {
+    let query= `SELECT employees.*, roles.title AS role_name 
+    FROM employees
+    INNER JOIN roles
+    ON employees.role_id = roles.id
+    `
+    connection.query(query,(err,result)=> {
+        if(err) throw err;
+        console.log(consoleTable.getTable(result))
+        initPrompt()
+    })
+    
+}
 /// add employee
 
 const addEmployee = () => {
@@ -121,7 +134,7 @@ const employeeQuestion = (roles, managers) => {
          });
         });
     })
-    .then(() => initPrompt() );
+    .then(() => viewJoinedTable() );
 };
 // add role
 const addRole = () => {
@@ -168,7 +181,7 @@ const roleQuestion = (deptNames) => {
 
         })
     })
-    .then(()=> initPrompt())
+    .then(()=> viewJoinedTable())
 }
 //add department
 const addDepartment = () => {
@@ -184,7 +197,38 @@ const addDepartment = () => {
     })
     .then(() => initPrompt());
   };
-  // change employee role
+  // update employee
+  const updateEmployee = () => {
+      
+    inquirer
+    .prompt({
+      name: "id",
+      type: "input",
+      message: "Enter employee id",
+    })
+    .then(function (answer) {
+      var id = answer.id;
+
+      inquirer
+        .prompt({
+          name: "roleId",
+          type: "input",
+          message: "Enter role id",
+        })
+        .then(function (answer) {
+          var roleId = answer.roleId;
+
+          var query = "UPDATE employee SET roles_id=? WHERE id=?";
+          connection.query(query, [roleId, id], function (err, res) {
+            if (err) {
+              console.log(err);
+            }
+            viewJoinedTable();
+          });
+        });
+    });
+}
+  
 
   
 
@@ -251,4 +295,4 @@ initLog();
       
 //     }
 // });
- viewTable("employees");
+ viewJoinedTable();
